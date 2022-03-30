@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import Keyframes from "../Keyframes";
 import "./style.scss";
 
-const TickerOutput = ({ text, width }) => {
+const TickerOutput = (props) => {
+  const { text, width } = props
   const settings = {
     animationDuration: 10000,
   };
@@ -11,47 +12,28 @@ const TickerOutput = ({ text, width }) => {
   const wholeOutputRef = useRef(null);
   const stringRef = useRef(null);
 
-  const [arrayOfText, setArrayOfText] = useState([text]);
   const [stringWidth, setStringWidth] = useState(0);
-
-  const getTextMultiplier = () => {
-    if (
-      textRef.current &&
-      wholeOutputRef.current &&
-      textRef.current.offsetWidth !== 0 &&
-      wholeOutputRef.current.offsetWidth !== 0
-    ) {
-      const multi = Math.round(
-        wholeOutputRef.current.offsetWidth / textRef.current.offsetWidth
-      );
-      return multi > 0 ? multi : 1;
-    }
-  };
-
-  useEffect(() => {
-    setArrayOfText(new Array(getTextMultiplier()).fill(text));
-  }, [text, width]);
+  const [wholeOutputWidth, setWholeOutputWidth] = useState(0);
 
   useEffect(() => {
     if (stringRef?.current?.offsetWidth > 0)
       setStringWidth(stringRef.current.offsetWidth);
-  }, [arrayOfText]);
+    if (wholeOutputRef?.current?.offsetWidth > 0)
+      setWholeOutputWidth(wholeOutputRef.current.offsetWidth);
+  }, [props]);
 
-  const textExpander = () => {
-    return (
-      arrayOfText.length &&
-      arrayOfText.map((text, index) => {
-        return <span key={index}>{text.trim() + " "}</span>;
-      })
-    );
-  };
+  const getEndOfAnimation = () => {
+    return stringWidth > wholeOutputWidth
+      ? `${-(2 * stringWidth - wholeOutputWidth)}px`
+      : "-100%"
+  }
 
   return (
     <div style={{ width }} ref={wholeOutputRef} className="ticker-output">
       <Keyframes
         name="ticker"
-        from={{ left: `${stringWidth}px`, opacity: 1 }}
-        to={{ left: `${-stringWidth}px`, opacity: 1 }}
+        from={{ left: "100%" }}
+        to={{ left: getEndOfAnimation() }}
       />
 
       <div
@@ -62,17 +44,16 @@ const TickerOutput = ({ text, width }) => {
         className="ticker-string"
       >
         <span ref={textRef}>{text.trim() + " "}</span>
-        {textExpander()}
       </div>
       <div
         style={{
           animationDuration: `${settings.animationDuration}ms`,
           animationDelay: `${settings.animationDuration / 2}ms`,
+          left: "100%"
         }}
         className="ticker-string"
       >
         <span>{text.trim() + " "}</span>
-        {textExpander()}
       </div>
     </div>
   );
